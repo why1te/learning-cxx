@@ -10,6 +10,11 @@ struct Tensor4D {
     Tensor4D(unsigned int const shape_[4], T const *data_) {
         unsigned int size = 1;
         // TODO: 填入正确的 shape 并计算 size
+        // data_是指针，无法通过sizeof得知指向的元素个数
+        for(unsigned int i = 0; i < 4; i++) {
+            shape[i] = shape_[i];
+            size *= shape[i];
+        }
         data = new T[size];
         std::memcpy(data, data_, size * sizeof(T));
     }
@@ -28,6 +33,36 @@ struct Tensor4D {
     // 则 `this` 与 `others` 相加时，3 个形状为 `[1, 2, 1, 4]` 的子张量各自与 `others` 对应项相加。
     Tensor4D &operator+=(Tensor4D const &others) {
         // TODO: 实现单向广播的加法
+        unsigned int size = 1;
+
+        // * 先验证全部维度是否正确
+        for(unsigned int dim = 0; dim < 4; dim++) {
+            ASSERT(
+                others.shape[dim] == shape[dim] || others.shape[dim] == 1,
+                "Shapes cannot be broadcast."
+            );
+            size *= shape[dim];
+        }
+        // 1. 逐个元素进行相加
+        for(unsigned int idx = 0; idx < size; idx++) {
+            unsigned int remaining = idx;
+            unsigned int otherIndex = 0;
+            unsigned int otherStride = 1;
+
+            // 2. 把一维物理坐标转换为逻辑坐标
+            for(int dim = 3; dim >= 0; dim--) {
+                unsigned int coordinate = remaining % shape[dim];
+                remaining /= shape[dim];
+                // 3. 计算 others 里对应的坐标
+                if(others.shape[dim] != 1) {
+                    otherIndex += coordinate * otherStride;
+                }
+                // 4. 正向计算每个维度的步长
+                otherStride *= others.shape[dim];
+            }
+            // 5. 相加
+            data[idx] += others.data[otherIndex];
+        }
         return *this;
     }
 };

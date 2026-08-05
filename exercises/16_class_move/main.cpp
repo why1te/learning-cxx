@@ -1,5 +1,5 @@
 #include "../exercise.h"
-
+// * 左值：有名字、稳定地址、生命周期较长的对象，可取地址；右值：临时产生的值，没有稳定身份
 // READ: 左值右值（概念）<https://learn.microsoft.com/zh-cn/cpp/c-language/l-value-and-r-value-expressions?view=msvc-170>
 // READ: 左值右值（细节）<https://zh.cppreference.com/w/cpp/language/value_category>
 // READ: 关于移动语义 <https://learn.microsoft.com/zh-cn/cpp/cpp/rvalue-reference-declarator-amp-amp?view=msvc-170#move-semantics>
@@ -15,21 +15,48 @@ class DynFibonacci {
 
 public:
     // TODO: 实现动态设置容量的构造器
-    DynFibonacci(int capacity): cache(new ?), cached(?) {}
+    DynFibonacci(int capacity): cache(new size_t[capacity]), cached(2) {
+        cache[0] = 0;
+        cache[1] = 1;
+        cache[2] = 1;
+    }
 
     // TODO: 实现移动构造器
-    DynFibonacci(DynFibonacci &&) noexcept = delete;
+    // 相当于初始化
+    DynFibonacci(DynFibonacci &&other) noexcept 
+        : cache(other.cache),
+          cached(other.cached)
+    {
+        // * 让原对象失去所有权
+        other.cache = nullptr;
+        other.cached = 0;
+    }
 
     // TODO: 实现移动赋值
+    // 运算符重载：参数（右值引用，表示接收临时对象）初始化之后赋值
     // NOTICE: ⚠ 注意移动到自身问题 ⚠
-    DynFibonacci &operator=(DynFibonacci &&) noexcept = delete;
+    DynFibonacci &operator=(DynFibonacci &&other) noexcept {
+        if (this != &other) {
+            delete[] cache;
+
+            cache = other.cache;
+            cached = other.cached;
+
+            other.cache = nullptr;
+            other.cached = 0;
+        }
+        // this是指针，*this才是对象本身
+        return *this;
+    }
 
     // TODO: 实现析构器，释放缓存空间
-    ~DynFibonacci();
+    ~DynFibonacci() {
+        delete[] cache;
+    }
 
     // TODO: 实现正确的缓存优化斐波那契计算
     size_t operator[](int i) {
-        for (; false; ++cached) {
+        for (; cached <= i; ++cached) {
             cache[cached] = cache[cached - 1] + cache[cached - 2];
         }
         return cache[i];

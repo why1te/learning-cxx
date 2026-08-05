@@ -7,12 +7,15 @@ static int i = 0;
 struct X {
     int x;
 
+    // 普通带参构造函数
     X(int x_) : x(x_) {
         std::cout << ++i << ". " << "X(" << x << ')' << std::endl;
     }
+    // 复制构造函数
     X(X const &other) : x(other.x) {
         std::cout << ++i << ". " << "X(X const &) : x(" << x << ')' << std::endl;
     }
+    // 析构函数
     ~X() {
         std::cout << ++i << ". " << "~X(" << x << ')' << std::endl;
     }
@@ -33,6 +36,7 @@ struct A {
 struct B : public A {
     X x;
 
+    // 构造顺序：基类A → 成员X → B自身；析构顺序与构造顺序相反
     B(int b) : A(1), x(b) {
         std::cout << ++i << ". " << "B(" << a << ", X(" << x.x << "))" << std::endl;
     }
@@ -50,9 +54,9 @@ int main(int argc, char **argv) {
     B b = B(3);
 
     // TODO: 补全三个类型的大小
-    static_assert(sizeof(X) == ?, "There is an int in X");
-    static_assert(sizeof(A) == ?, "There is an int in A");
-    static_assert(sizeof(B) == ?, "B is an A with an X");
+    static_assert(sizeof(X) == 4, "There is an int in X");
+    static_assert(sizeof(A) == 4, "There is an int in A");
+    static_assert(sizeof(B) == 8, "B is an A with an X");
 
     i = 0;
     std::cout << std::endl

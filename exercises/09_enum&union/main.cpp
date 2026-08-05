@@ -6,6 +6,7 @@
 // 在 `enum` 中定义标识符等价于定义 constexpr 常量，
 // 这些标识符不需要前缀，可以直接引用。
 // 因此 `enum` 定义会污染命名空间。
+// 底层类型通常为 int，但可以指定为 unsigned char 类型
 enum ColorEnum : unsigned char {
     COLOR_RED = 31,
     COLOR_GREEN,
@@ -16,6 +17,8 @@ enum ColorEnum : unsigned char {
 // 有作用域枚举型是 C++ 引入的类型安全枚举。
 // 其内部标识符需要带前缀引用，如 `Color::Red`。
 // 作用域枚举型可以避免命名空间污染，并提供类型安全保证。
+// * 不能自动转换为 int 类型
+// int x = static_cast<int>(Color::RED)
 enum class Color : int {
     Red = COLOR_RED,
     Green,
@@ -30,6 +33,8 @@ ColorEnum convert_by_pun(Color c) {
     // 但这种写法实际上仅在 C 语言良定义，在 C++ 中是未定义行为。
     // 这是比较少见的 C++ 不与 C 保持兼容的特性。
     // READ: 类型双关 <https://tttapa.github.io/Pages/Programming/Cpp/Practices/type-punning.html>
+    // * 双关：实际数值为int型，但也有单独的类型身份
+    // 使用 union：成员变量共享同一块内存，不改变数值的二进制表示，只改变它的类型身份
     union TypePun {
         ColorEnum e;
         Color c;
@@ -37,7 +42,7 @@ ColorEnum convert_by_pun(Color c) {
 
     TypePun pun;
     // TODO: 补全类型双关转换
-
+    pun.c = c;
     return pun.e;
 }
 
